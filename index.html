@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cabo de Guerra com Dados</title>
+
+    <!-- Tailwind CSS para estrutura responsiva e utilitários -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Folha de estilos personalizada (tema taberna / mesa de feltro) -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="text-amber-50 min-h-[100dvh] flex flex-col justify-between sm:justify-center p-3 sm:p-5 relative overflow-x-hidden select-none">
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="w-full max-w-3xl mx-auto relative z-10 flex flex-col gap-3.5 sm:gap-5">
+
+        <!-- CABEÇALHO -->
+        <header class="text-center relative">
+            <!-- Botão de Áudio -->
+            <button id="soundToggle" aria-label="Alternar som" title="Som ativado/desativado"
+                class="wood-btn-small absolute right-0 top-0 p-2 rounded-xl text-amber-200 text-sm transition active:scale-90">
+                🔊
+            </button>
+
+            <h1 class="font-classic text-2xl sm:text-4xl md:text-5xl font-black tracking-wide text-amber-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                🎲 Cabo de Guerra
+            </h1>
+            <p class="text-amber-100/75 text-xs sm:text-sm mt-1">
+                Primeiro a alcançar <span class="text-amber-300 font-bold">7 pontos</span> na mesa vence
+            </p>
+
+            <!-- Plaquinhas de Regras Especiais -->
+            <div class="mt-2.5 flex flex-wrap justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                <span class="rule-badge border-red-800/80 bg-red-950/70 text-red-200">
+                    <strong>1+1</strong> · ambos −1 pt
+                </span>
+                <span class="rule-badge border-amber-600/80 bg-amber-950/70 text-amber-200">
+                    <strong>3+3</strong> · ambos +1 pt
+                </span>
+                <span class="rule-badge border-sky-800/80 bg-sky-950/70 text-sky-200">
+                    <strong>6+6</strong> · +1 dado cada
+                </span>
+            </div>
+        </header>
+
+        <!-- PLACAR E CORDA DE TRAÇÃO -->
+        <section class="flex flex-col gap-3">
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+
+                <!-- Placar Jogador 1 (Carmesim) -->
+                <div id="p1card" class="wood-card relative rounded-2xl p-3 sm:p-4 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <span class="text-red-300 font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-600 border border-red-300 inline-block"></span>
+                            Jogador 1
+                        </span>
+                        <span id="diceCount1" class="text-[11px] sm:text-xs px-2 py-0.5 rounded bg-black/35 text-amber-200/90 border border-amber-500/20 font-medium">
+                            1 dado
+                        </span>
+                    </div>
+                    <div class="flex items-baseline justify-between mt-1.5">
+                        <div id="score1" class="font-classic text-4xl sm:text-5xl font-black tabular-nums leading-none text-amber-50">0</div>
+                        <div id="pips1" class="flex gap-1"></div>
+                    </div>
+                </div>
+
+                <!-- Medalhão Central VS -->
+                <div class="brass-badge w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-classic font-black text-xs sm:text-sm text-amber-950">
+                    VS
+                </div>
+
+                <!-- Placar Jogador 2 (Azul Royal) -->
+                <div id="p2card" class="wood-card relative rounded-2xl p-3 sm:p-4 transition-all duration-300">
+                    <div class="flex items-center justify-between flex-row-reverse">
+                        <span class="text-sky-300 font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                            Jogador 2
+                            <span class="w-2.5 h-2.5 rounded-full bg-sky-600 border border-sky-300 inline-block"></span>
+                        </span>
+                        <span id="diceCount2" class="text-[11px] sm:text-xs px-2 py-0.5 rounded bg-black/35 text-amber-200/90 border border-amber-500/20 font-medium">
+                            1 dado
+                        </span>
+                    </div>
+                    <div class="flex items-baseline justify-between mt-1.5 flex-row-reverse">
+                        <div id="score2" class="font-classic text-4xl sm:text-5xl font-black tabular-nums leading-none text-amber-50">0</div>
+                        <div id="pips2" class="flex gap-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trilho da Corda de Sisal -->
+            <div class="rope-container relative h-4 rounded-full p-0.5 overflow-hidden">
+                <div class="rope-cord w-full h-full rounded-full relative flex items-center">
+                    <!-- Marcação central da mesa -->
+                    <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-amber-200/60 -translate-x-1/2"></div>
+                    <!-- Anel de Bronze que se move conforme a vantagem -->
+                    <div id="ropeKnot" style="left: 50%;" class="brass-ring absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full transition-all duration-500 ease-out"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MESA DE FELTRO VERDE (ARENA DOS DADOS) -->
+        <section id="arena" class="felt-table relative rounded-3xl p-4 sm:p-7 min-h-[180px] sm:min-h-[225px] flex flex-col justify-center overflow-hidden">
+            <!-- Linha divisória costurada no feltro -->
+            <div class="pointer-events-none absolute inset-y-4 left-1/2 w-px border-l border-dashed border-amber-200/25"></div>
+
+            <div class="relative grid grid-cols-2 gap-3 sm:gap-8 items-center">
+                <!-- Área Jogador 1 -->
+                <div class="flex flex-col items-center gap-2.5 sm:gap-3">
+                    <div id="dice1" class="flex flex-wrap gap-2 sm:gap-2.5 justify-center min-h-[52px] sm:min-h-[64px] items-center"></div>
+                    <div id="total1" class="h-6 px-3 py-0.5 rounded-full bg-black/40 border border-amber-200/20 text-xs sm:text-sm font-bold text-amber-200 tabular-nums opacity-0 transition-opacity duration-300"></div>
+                </div>
+
+                <!-- Área Jogador 2 -->
+                <div class="flex flex-col items-center gap-2.5 sm:gap-3">
+                    <div id="dice2" class="flex flex-wrap gap-2 sm:gap-2.5 justify-center min-h-[52px] sm:min-h-[64px] items-center"></div>
+                    <div id="total2" class="h-6 px-3 py-0.5 rounded-full bg-black/40 border border-amber-200/20 text-xs sm:text-sm font-bold text-amber-200 tabular-nums opacity-0 transition-opacity duration-300"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MENSAGEM DE STATUS -->
+        <div id="message" class="text-center text-sm sm:text-lg font-bold min-h-[28px] text-amber-100 flex items-center justify-center px-2 drop-shadow">
+            Lance os dados sobre a mesa para começar!
+        </div>
+
+        <!-- BOTÕES DE AÇÃO -->
+        <div class="flex flex-col items-center gap-2 relative z-10">
+            <div class="flex flex-wrap justify-center gap-3 w-full sm:w-auto">
+                <button id="rollBtn"
+                    class="btn-brass animate-btn-pulse w-full sm:w-auto px-9 py-3.5 sm:py-4 rounded-2xl font-classic font-black text-sm sm:text-base uppercase tracking-wider text-amber-950 active:scale-95 transition-all disabled:opacity-45 disabled:cursor-not-allowed disabled:animate-none">
+                    🎲 Lançar Dados
+                </button>
+                <button id="restartBtn"
+                    class="hidden btn-wood w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-2xl font-classic font-black text-sm sm:text-base uppercase tracking-wider text-amber-100 active:scale-95 transition-all">
+                    🔄 Nova Partida
+                </button>
+            </div>
+            <span class="hidden sm:inline text-[11px] text-amber-200/50">
+                Atalho: pressione <kbd class="px-1.5 py-0.5 rounded bg-black/40 border border-amber-200/20 text-amber-200">Espaço</kbd> para lançar
+            </span>
+        </div>
+
+        <!-- LIVRO DE REGISTROS (HISTÓRICO) -->
+        <div class="wood-card rounded-2xl p-2.5 sm:p-3">
+            <div class="flex items-center justify-between text-[11px] uppercase tracking-wider text-amber-200/60 font-bold mb-1.5 px-1">
+                <span>Registro da Partida</span>
+                <span id="roundCounter">Rodada 0</span>
+            </div>
+            <div id="log" class="log-scroll h-24 sm:h-28 overflow-y-auto text-xs text-amber-100/80 space-y-1 pr-1">
+                <div class="text-amber-200/40 italic px-1">Aguardando o primeiro lance...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- POPUP DE EVENTO ESPECIAL -->
+    <div id="specialPopup" class="fixed inset-0 z-40 hidden items-center justify-center pointer-events-none px-4">
+        <div id="specialPopupBox" class="px-6 sm:px-9 py-3.5 sm:py-4 rounded-2xl font-classic font-black text-2xl sm:text-4xl md:text-5xl text-center shadow-2xl border-2 bg-[#1c120c]/95 animate-popup-banner"></div>
+    </div>
+
+    <!-- TELA DE VITÓRIA -->
+    <div id="overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="wood-card text-center max-w-md w-full rounded-3xl p-8 shadow-2xl border-2 border-amber-500/50">
+            <div class="text-6xl sm:text-7xl mb-3 animate-confetti-pop">🏆</div>
+            <div id="winnerText" class="font-classic text-3xl sm:text-5xl font-black animate-confetti-pop drop-shadow"></div>
+            <p id="winnerSub" class="text-amber-200/80 text-sm mt-2"></p>
+            <button id="overlayRestartBtn" class="btn-brass mt-7 w-full sm:w-auto px-8 py-4 rounded-2xl font-classic font-black uppercase tracking-wider text-amber-950 hover:scale-105 active:scale-95 transition-transform">
+                🔄 Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- Lógica do Jogo -->
+    <script src="script.js"></script>
+</body>
+</html>
